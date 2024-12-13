@@ -44,7 +44,63 @@ class Buttons():
         text = font.render(self.text, 1, (r, g, b))
         win.blit(text, (self.x + self.width/2 - text.get_width()/2, self.y + 10))
 
+class Dropdown():
+    def __init__(self, x, y, width, height, options, font, default_color=(255, 255, 255), hover_color=(200, 200, 200), selected_color=(150, 150, 150)):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.options = options
+        self.font = font
+        self.default_color = default_color
+        self.hover_color = hover_color
+        self.selected_color = selected_color
+        self.is_open = False
+        self.selected_option = None
+        self.hovered_option = None
 
+    def draw(self, screen):
+        # Draw main dropdown rectangle
+        pygame.draw.rect(screen, self.selected_color if self.selected_option else self.default_color, self.rect)
+        pygame.draw.rect(screen, (0, 0, 0), self.rect, 2)
+
+        # Display selected option
+        if self.selected_option is not None:
+            text = self.font.render(self.options[self.selected_option], True, (0, 0, 0))
+            screen.blit(text, (self.rect.x + 5, self.rect.y + (self.rect.height - text.get_height()) // 2))
+
+        if self.is_open:
+            for i, option in enumerate(self.options):
+                option_rect = pygame.Rect(self.rect.x, self.rect.y + (i + 1) * self.rect.height, self.rect.width, self.rect.height)
+                color = self.hover_color if self.hovered_option == i else self.default_color
+                pygame.draw.rect(screen, color, option_rect)
+                pygame.draw.rect(screen, (0, 0, 0), option_rect, 2)
+
+                option_text = self.font.render(option, True, (0, 0, 0))
+                screen.blit(option_text, (option_rect.x + 5, option_rect.y + (option_rect.height - option_text.get_height()) // 2))
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.is_open:
+                for i, option in enumerate(self.options):
+                    option_rect = pygame.Rect(self.rect.x, self.rect.y + (i + 1) * self.rect.height, self.rect.width, self.rect.height)
+                    if option_rect.collidepoint(event.pos):
+                        self.selected_option = i
+                        self.is_open = False
+                        return True
+                # Click outside the dropdown menu
+                if not self.rect.collidepoint(event.pos):
+                    self.is_open = False
+            else:
+                if self.rect.collidepoint(event.pos):
+                    self.is_open = True
+        elif event.type == pygame.MOUSEMOTION:
+            if self.is_open:
+                self.hovered_option = None
+                for i, option in enumerate(self.options):
+                    option_rect = pygame.Rect(self.rect.x, self.rect.y + (i + 1) * self.rect.height, self.rect.width, self.rect.height)
+                    if option_rect.collidepoint(event.pos):
+                        self.hovered_option = i
+                        break
+
+        return False
 
 class Tiles(pygame.sprite.Sprite):
     def __init__(self, x, y, terrain, id):
